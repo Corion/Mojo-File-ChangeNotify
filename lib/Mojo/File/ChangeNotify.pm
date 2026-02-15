@@ -39,7 +39,8 @@ sub _spawn_watcher( $self, $args ) {
     my $subprocess = Mojo::IOLoop::Subprocess->new();
     #use Data::Dumper; warn Dumper( File::ChangeNotify->usable_classes );
     $subprocess->run( sub( $subprocess ) {
-        watch( $subprocess, $args )
+        watch( $subprocess, $args );
+        return () # return an empty list here to not return anything after the process ends
     }, sub ($subprocess, $err, @results ) {
         say "Subprocess error: $err" and return if $err;
         say "Surprising results: @results"
@@ -47,6 +48,8 @@ sub _spawn_watcher( $self, $args ) {
     }
     );
 }
+
+our %PIDs;
 
 sub instantiate_watcher( $class, %args ) {
     my $handler = delete $args{ on_change };
@@ -56,11 +59,33 @@ sub instantiate_watcher( $class, %args ) {
     }
 
     $self->watcher( $self->_spawn_watcher( \%args ));
+    $self->watcher->on('spawn' => sub( $w ) {
+        $PIDs{ $w->pid } = 1;
+    });
     $self->watcher->on('progress' => sub( $w, $events ) {
         $self->emit('change' => $events )
     });
+    #$self->watcher->on('cleanup' => sub( $w, $events ) {
+    #    warn "Child gone (in child?)";
+    #});
 
     return $self;
+}
+
+# Cleanup watchers when we are removed
+sub DESTROY( $self ) {
+    if( my $w = $self->watcher ) {
+        my $pid = $w->pid;
+        if( $pid ) {
+            delete $PIDs{ $pid };
+            kill KILL => $w->pid;
+        }
+    }
+}
+
+# Clean up watchers if we die for other reasons
+END {
+    kill KILL => keys %PIDs
 }
 
 1;
