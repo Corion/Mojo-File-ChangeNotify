@@ -57,10 +57,10 @@ my %module = (
         'Mojo::IOLoop::Subprocess' => '0'
     },
     TEST_REQUIRES =>     {
-        'experimental' => '0',
         'Data::Dumper' => '0',
         'File::Temp'   => '0',
         'Test2::V0'    => '0',
+        'Test::More'   => '0'
     },
 
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
