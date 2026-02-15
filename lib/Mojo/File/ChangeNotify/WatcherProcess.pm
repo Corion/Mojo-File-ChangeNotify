@@ -31,7 +31,11 @@ sub watch( $subprocess, $args ) {
     my $watcher = File::ChangeNotify->instantiate_watcher( $args->%* );
     while( my @events = $watcher->wait_for_events ) {
         for my $list (@events) {
-            $subprocess->progress( [ map {; +{ path => $_->path, type => $_->type } } $list ]);
+            $subprocess->progress( [ map {;
+                                       defined $_->path
+                                       ? +{ path => $_->path, type => $_->type }
+                                       : ()
+                                     } $list ]);
         }
     }
 }
