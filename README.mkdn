@@ -20,7 +20,11 @@ Mojo::File::ChangeNotify - turn file changes into Mojo events
 
     # alternatively
     $watcher->on( 'change' => sub( $watcher, @event_lists ) {
-        ...
+        for my $l (@event_lists) {
+            for my $e ($l->@*) {
+                print "[$e->{type}] $e->{path}\n";
+            }
+        }
     });
     # note that the watcher might need about 1s to start up
 

@@ -21,7 +21,11 @@ Mojo::File::ChangeNotify - turn file changes into Mojo events
 
   # alternatively
   $watcher->on( 'change' => sub( $watcher, @event_lists ) {
-      ...
+      for my $l (@event_lists) {
+          for my $e ($l->@*) {
+              print "[$e->{type}] $e->{path}\n";
+          }
+      }
   });
   # note that the watcher might need about 1s to start up
 
@@ -30,6 +34,10 @@ Mojo::File::ChangeNotify - turn file changes into Mojo events
 L<File::ChangeNotify> only supports blocking waits or polling as an
 interface. This module creates a subprocess that blocks and communicates
 the changes to the main process.
+
+=head1 SEE ALSO
+
+L<File::ChangeNotify> - the file watching implementation
 
 =cut
 
