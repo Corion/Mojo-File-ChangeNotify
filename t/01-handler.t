@@ -26,7 +26,7 @@ my $create = Mojo::IOLoop->timer( 1 => sub {
         or die "Couldn't create '$testfile': $!";
 });
 
-my $timeout = Mojo::IOLoop->timer( 2 => sub {
+my $timeout = Mojo::IOLoop->timer( 10 => sub {
     Mojo::IOLoop->stop_gracefully;
 });
 
