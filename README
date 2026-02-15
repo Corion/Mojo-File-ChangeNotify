@@ -28,6 +28,9 @@ Should you wish to install this module manually, the procedure is
 
 
 
+SEE ALSO
+
+L<File::ChangeNotify> - the file watching implementation
 
 
 

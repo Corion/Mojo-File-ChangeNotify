@@ -33,3 +33,7 @@ Mojo::File::ChangeNotify - turn file changes into Mojo events
 [File::ChangeNotify](https://metacpan.org/pod/File%3A%3AChangeNotify) only supports blocking waits or polling as an
 interface. This module creates a subprocess that blocks and communicates
 the changes to the main process.
+
+# SEE ALSO
+
+[File::ChangeNotify](https://metacpan.org/pod/File%3A%3AChangeNotify) - the file watching implementation
