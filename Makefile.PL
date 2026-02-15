@@ -57,7 +57,6 @@ my %module = (
         'Mojo::IOLoop::Subprocess' => '0'
     },
     TEST_REQUIRES =>     {
-        'Data::Dumper' => '0',
         'File::Temp'   => '0',
         'Test2::V0'    => '0',
         'Test::More'   => '0'

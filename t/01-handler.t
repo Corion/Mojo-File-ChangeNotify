@@ -5,7 +5,6 @@ use Test2::V0 '-no_srand';
 
 use Mojo::File::ChangeNotify;
 
-use Data::Dumper;
 use File::Temp 'tempdir';
 
 my $tempdir = tempdir(CLEANUP => 1);
