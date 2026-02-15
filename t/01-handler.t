@@ -16,6 +16,7 @@ my $w = Mojo::File::ChangeNotify->instantiate_watcher(
     on_change => sub($s,$ev) {
         note "Saw event(s)";
         push @events, $ev;
+        Mojo::IOLoop->stop_gracefully;
     });
 
 # We need to give the watcher some time to start up :-/
