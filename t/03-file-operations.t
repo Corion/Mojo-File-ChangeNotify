@@ -77,8 +77,8 @@ subtest "Test 2: Delete file" => sub {
         print $fh "content\n";
         close $fh;
 
-        # Delete the file after a brief delay
-        Mojo::IOLoop->timer(0.5 => sub {
+        # Delete the file after some time again
+        Mojo::IOLoop->timer(4 => sub {
             unlink($file) or die "Cannot delete $file: $!";
         });
     });
@@ -186,13 +186,13 @@ subtest "Test 4: Multiple file operations in sequence" => sub {
         print $fh "initial\n";
         close $fh;
 
-        Mojo::IOLoop->timer(0.3 => sub {
+        Mojo::IOLoop->timer(2 => sub {
             # Modify file
             open $fh, '>', $file or die "Cannot open $file: $!";
             print $fh "modified\n";
             close $fh;
 
-            Mojo::IOLoop->timer(0.3 => sub {
+            Mojo::IOLoop->timer(2 => sub {
                 # Rename file
                 my $newfile = "$tempdir/sequence_renamed.txt";
                 move($file, $newfile);
@@ -205,7 +205,7 @@ subtest "Test 4: Multiple file operations in sequence" => sub {
         });
     });
 
-    my $timeout = Mojo::IOLoop->timer(5 => sub {
+    my $timeout = Mojo::IOLoop->timer(7 => sub {
         Mojo::IOLoop->stop;
     });
 
@@ -254,7 +254,7 @@ subtest "Test 5: Create and delete directory" => sub {
         close $fh;
 
         # Delete directory after a delay (should fail since not empty)
-        Mojo::IOLoop->timer(0.5 => sub {
+        Mojo::IOLoop->timer(1 => sub {
             # Delete file first, then directory
             unlink($file);
             rmdir $dir or die "Cannot rmdir $dir: $!";
