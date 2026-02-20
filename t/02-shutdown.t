@@ -7,11 +7,13 @@ use Mojo::File::ChangeNotify;
 use File::Temp 'tempdir';
 use File::Spec;
 use Mojo::Promise;
-use Time::HiRes 'sleep';
 use Scalar::Util 'weaken';
 
 # Helper to check if a PID is running (not a zombie)
 sub pid_is_running($pid) {
+    my $timeout = time +2;
+
+RETRY:
     # kill 0 returns true for zombies too, so we need to check the process state
     my $result = kill 0 => $pid;
     return 0 unless $result;
@@ -22,6 +24,11 @@ sub pid_is_running($pid) {
         # The process state is the 3rd field; Z indicates zombie
         my @fields = split ' ', $stat;
         return 0 if @fields >= 3 && $fields[2] eq 'Z';
+    }
+
+    if( time < $timeout ) {
+        sleep 1;
+        goto RETRY;
     }
 
     return 1;
@@ -51,7 +58,7 @@ sub wait_poll( $timeout, $poll ) {
 
 # Helper to wait for subprocess to spawn and get PID
 sub get_watcher_pid($watcher) {
-    # Run event loop briefly to let subprocess spawn
+    # Run event loop to let subprocess spawn
     my $w = $watcher;
     weaken $w;
     my $pid;
@@ -76,10 +83,6 @@ my $tempdir = tempdir(CLEANUP => 1);
 #=====================================================================
 # Part 2: Normal Shutdown Tests
 #=====================================================================
-
-sub brief_wait {
-    sleep 0.3;
-}
 
 subtest "Test 1: Scope-based cleanup" => sub {
     my $pid;
@@ -156,7 +159,6 @@ subtest "Test 4: Parent die() with END block cleanup" => sub {
     use lib 'lib';
     use Mojo::File::ChangeNotify;
     use File::Temp 'tempdir';
-    use Time::HiRes 'time';
 
     my $test_temp = $ARGV[0];
 
@@ -227,7 +229,6 @@ subtest "Test 5: eval { die } pattern" => sub {
     like $@, qr/Test exception/, "Exception was raised";
 
     # DESTROY should have run during exception handling
-    brief_wait();
     ok !pid_is_running($pid), "Child $pid was killed when eval died";
 };
 
@@ -278,7 +279,6 @@ END_SCRIPT
     close $fh;
 
     system($^X, $script);
-    brief_wait();
 
     my $pid_file = File::Spec->catfile($tempdir, 'test6.pids');
     if (open my $pf, '<', $pid_file) {
@@ -337,13 +337,12 @@ subtest "Test 8: Selective watcher destruction" => sub {
     my $w2 = Mojo::File::ChangeNotify->instantiate_watcher(
         directories => [$tempdir],
     );
-    brief_wait();
+
     my $pid2 = get_watcher_pid($w2);
 
     my $w3 = Mojo::File::ChangeNotify->instantiate_watcher(
         directories => [$tempdir],
     );
-    #brief_wait();
     my $pid3 = get_watcher_pid($w3);
 
     # All running
@@ -353,20 +352,17 @@ subtest "Test 8: Selective watcher destruction" => sub {
 
     # Kill w2
     undef $w2;
-    brief_wait();
     ok !pid_is_running($pid2), "Watcher 2 child $pid2 was killed";
     ok pid_is_running($pid1), "Watcher 1 child $pid1 still running";
     ok pid_is_running($pid3), "Watcher 3 child $pid3 still running";
 
     # Kill w1
     undef $w1;
-    brief_wait();
     ok !pid_is_running($pid1), "Watcher 1 child $pid1 was killed";
     ok pid_is_running($pid3), "Watcher 3 child $pid3 still running";
 
     # Kill w3
     undef $w3;
-    brief_wait();
     ok !pid_is_running($pid3), "Watcher 3 child $pid3 was killed";
 };
 
@@ -441,13 +437,11 @@ subtest "Test 10: PID already dead (zombie/already exited)" => sub {
     my $w = Mojo::File::ChangeNotify->instantiate_watcher(
         directories => [$tempdir],
     );
-    brief_wait();
     my $pid = get_watcher_pid($w);
     ok pid_is_running($pid), "Child $pid is running";
 
     # Kill the child manually
     kill KILL => $pid;
-    brief_wait();
     ok !pid_is_running($pid), "Child $pid was manually killed";
 
     # DESTROY should handle this gracefully
@@ -459,7 +453,6 @@ subtest "Test 11: Forked parent with copied watcher" => sub {
     my $w = Mojo::File::ChangeNotify->instantiate_watcher(
         directories => [$tempdir],
     );
-    brief_wait();
     my $parent_pid = get_watcher_pid($w);
     ok pid_is_running($parent_pid), "Original child $parent_pid is running";
 
@@ -475,7 +468,6 @@ subtest "Test 11: Forked parent with copied watcher" => sub {
     } else {
         # Parent process
         waitpid($fork_pid, 0);
-        brief_wait();
 
         # The original watcher child is KILLED by the child process's DESTROY
         # This is the limitation: forking after creating a watcher causes issues
