@@ -1,4 +1,4 @@
-package Mojo::File::ChangeNotify::WatcherProcess 0.01;
+package Mojo::File::ChangeNotify::WatcherProcess 0.02;
 use 5.020;
 use experimental 'signatures';
 use feature 'postderef';

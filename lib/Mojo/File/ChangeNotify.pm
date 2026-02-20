@@ -1,4 +1,4 @@
-package Mojo::File::ChangeNotify 0.01;
+package Mojo::File::ChangeNotify 0.02;
 use 5.020;
 use Mojo::Base 'Mojo::EventEmitter', -signatures;
 use Mojo::File::ChangeNotify::WatcherProcess 'watch';
