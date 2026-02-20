@@ -44,6 +44,7 @@ L<File::ChangeNotify> - the file watching implementation
 
 has 'watcher';
 has 'watcher_pid';  # Store the PID so we can access it in DESTROY
+
 our %PIDs;
 
 sub _spawn_watcher( $self, $args ) {
@@ -66,13 +67,16 @@ sub _spawn_watcher( $self, $args ) {
         watch( $subprocess, $args );
         return () # return an empty list here to not return anything after the process ends
     }, sub ($subprocess, $err, @results ) {
-        say "Subprocess error: $err" and return if $err;
+        if( $err
+            and $err !~ /malformed JSON string/  # caused by us terminating the child
+            and $err !~ /Missing or empty input/ # caused by us terminating the child
+        ) {
+            warn "Subprocess error: $err" and return;
+        }
         say "Surprising results: @results"
             if @results;
-    }
-    );
+    });
 }
-
 
 sub instantiate_watcher( $class, %args ) {
     my $handler = delete $args{ on_change };
